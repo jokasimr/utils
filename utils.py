@@ -1,5 +1,18 @@
 from functools import wraps
-from itertools import chain
+from itertools import islice, chain, zip_longest, tee
+from collections import deque
+import re
+import numpy as np
+from math import log10, floor
+from random import random
+
+
+def head(it, n):
+    yield from islice(it, n)
+
+
+def tail(it, n):
+    yield from deque(it, maxlen=n)
 
 
 def cache(args_dict, max_size=128):
@@ -29,7 +42,7 @@ def flatten(iterable):
     Takes a iterable of nested iterables and yields each 'atom' in
     the nested structure. An atom is a non-iterable or a string.
     '''
-    if not hasattr(iterable, '__iter__')  or type(iterable) == str:
+    if not hasattr(iterable, '__iter__') or type(iterable) == str:
         yield iterable
         return
     iterable = iter(iterable)
@@ -47,9 +60,6 @@ def flatten(iterable):
                 iterable = chain(data, iterable)
         except TypeError:
             yield item
-
-
-import re
 
 
 def split(delimiter, string):
@@ -75,9 +85,6 @@ def split_rows(rows):
             for row in rows]
 
 
-from itertools import zip_longest
-
-
 def chunks(iterable, n, fillvalue=None):
     '''Take the items from the iterable in chunks of n.
        If the values run out 'fillvalue' will be used instead.'''
@@ -85,9 +92,6 @@ def chunks(iterable, n, fillvalue=None):
     if fillvalue is None:
         return zip_longest(*(it for i in range(n)))
     return zip_longest(*(it for i in range(n)), fillvalue=fillvalue)
-
-
-from collections import deque
 
 
 def neighbors(iterable, n):
@@ -119,9 +123,6 @@ def GroupDict(mapping):
     return dictionary
 
 
-from itertools import tee
-
-
 def teemap(key, iterable):
     it, itp = tee(iterable)
     return map(key, it), itp
@@ -129,9 +130,6 @@ def teemap(key, iterable):
 
 def group(iterable, key):
     return GroupDict(zip(*teemap(key, iterable)))
-
-
-import numpy as np
 
 
 def linear_interp(time, values, errors, n=100):
@@ -161,9 +159,6 @@ def laplacian2d(Z, dx):
     Zright = Z[1:-1, 2:]
     Zcenter = Z[1:-1, 1:-1]
     return (Ztop + Zleft + Zbottom + Zright - 4 * Zcenter) / dx**2
-
-
-from random import random
 
 
 def sign(a):
@@ -217,14 +212,13 @@ def itersolve(func, expected, start=0,
     return x, func(x), cnt
 
 
-from math import log10, floor
-
-
-def solve(func, expected, interval=(-10, 10), n=100, tolerance=0.1, give_all=False):
+def solve(func, expected, interval=(-10, 10), n=100,
+          tolerance=0.1, give_all=False):
     ''' Tries itersolve for the expected value on n different places along
         the given interval.
 
-        Returns: The successful return values, x and y sorted from best to worst.
+        Returns:
+            The successful return values, x and y sorted from best to worst.
 
         Example:
             f = lambda x: x**2 + 1
